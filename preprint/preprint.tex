@@ -1,0 +1,139 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,booktabs,array,tabularx,tikz,xcolor,fancyhdr,hyperref}
+\usepackage[top=23mm,bottom=24mm,left=24mm,right=24mm,headheight=15pt]{geometry}
+\definecolor{ink}{HTML}{19354B}\definecolor{accent}{HTML}{006D73}
+\hypersetup{colorlinks=true,linkcolor=accent,urlcolor=accent,pdftitle={Extremal counts for diagonal tilings and a triangular cellular automaton}}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small Diagonal tilings and triangular automata}
+\fancyhead[R]{\small Preprint}\fancyfoot[C]{\thepage}\renewcommand{\headrulewidth}{0.3pt}
+\setlength{\parindent}{0pt}\setlength{\parskip}{5pt}
+\setlength{\abovedisplayskip}{7pt}\setlength{\belowdisplayskip}{7pt}
+\newcommand{\wt}{\operatorname{wt}}
+\newcommand{\stmt}[1]{\textbf{\color{accent}#1}\enspace}
+\newcommand{\V}{\mathsf V}\newcommand{\X}{\mathsf X}
+\newcommand{\repo}{https://github.com/dreamzzz-dev/oeis-combinatorial-proofs}
+\newcommand{\vertpiece}[1]{\draw[accent,line width=1.7pt] (#1,0)--(#1,1);}
+\newcommand{\crosspiece}[1]{\draw[ink,line width=1.35pt] (#1,0)--({#1+1},1) (#1,1)--({#1+1},0);}
+\newcommand{\strip}[2]{\begin{tikzpicture}[x=5.6mm,y=5.6mm,baseline=(current bounding box.center)]
+\draw[gray!55,shift={(-0.5,-0.5)},step=1] (0,0) grid (4,2);
+#1
+\foreach \x in {0,...,3} \foreach \y in {0,1} \fill[ink] (\x,\y) circle (1.35pt);
+\node[below,font=\small] at (1.5,-0.7) {$#2$};
+\end{tikzpicture}}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries\color{ink} Extremal counts for diagonal tilings\\[3pt]
+and a triangular cellular automaton}\\[7pt]
+{\small A formalized note on OEIS A401673 and A275667 \quad$\cdot$\quad 26 November 2026}
+\end{center}
+
+\stmt{Abstract.} We prove two counts for perfect matchings of an even square grid with both diagonals allowed. There is exactly one all-diagonal matching, and exactly $n^2(n+1)$ matchings of a $2n\times2n$ grid use two ordinary dominoes. We also prove four recurrences for the population of the triangular odd-neighbour automaton started from a single cell. The arguments use a unique decomposition into two-row strips and a decomposition of Laurent polynomials by exponent parity. Lean proofs for all six identities accompany this note.
+
+\section*{1. Where can the two ordinary dominoes go?}
+Pair the cells of a fixed $2n\times2n$ board. An ordinary domino pairs cells sharing an edge; a diagonal piece pairs cells meeting only at a corner. Diagonal connections may cross. Rotations and reflections act on the set of tilings and are counted separately whenever they give different tilings. Write $T(n,k)$ for the number using exactly $2k$ diagonal pieces. Ry{\l}ko recorded the following two observations in A401673 and its computational notebook [1].
+
+\stmt{Theorem 1.} For every $n\ge1$,
+\[
+ T(n,n^2)=1,\qquad T(n,n^2-1)=n^2(n+1).
+\]
+
+\textit{Proof.} Suppose first that there are no horizontal dominoes. Every cell in the first row pairs with a different cell in the second, exhausting that row. Removing these rows and repeating gives $n$ independent two-row strips. At the left end of each strip, the upper cell can pair straight down, using one column ($\V$). If it pairs diagonally to the right, the lower left cell must pair with the upper right one. These two crossed diagonals use two columns ($\X$). This gives a bijection with words of total width $2n$. An all-diagonal strip must be $\X^n$.
+
+Now suppose there are two ordinary dominoes. Each vertical or diagonal piece uses one cell in each row-parity class. The two classes have equal size, so equal numbers of horizontal dominoes must lie in each class. The two ordinary dominoes are therefore parallel. If both are vertical, the number of $\V$'s in each strip is even by its width. Choose their common strip in $n$ ways. Its word has two $\V$'s and $n-1$ copies of $\X$, giving $\binom{n+1}{2}$ choices. Rotation gives just as many tilings with two horizontal dominoes. The total is $2n\binom{n+1}{2}=n^2(n+1)$. \hfill$\square$
+
+\begin{center}
+\strip{\vertpiece{0}\vertpiece{1}\crosspiece{2}}{\V\V\X}\qquad
+\strip{\vertpiece{0}\crosspiece{1}\vertpiece{3}}{\V\X\V}\qquad
+\strip{\crosspiece{0}\vertpiece{2}\vertpiece{3}}{\X\V\V}\\[-1pt]
+{\small Figure 1. All three possibilities for the distinguished strip when $n=2$.}
+\end{center}
+\newpage
+\section*{2. An odd-neighbour rule on triangular cells}
+Tile the plane with equilateral triangles. At time zero a single triangle is lit. At each subsequent step a triangle lights up precisely when an odd number of its three edge-neighbours were lit at the preceding step. Let $a(m)$ be the number of lit cells at time $m$. Its first values are $1,3,7,9,7,21,25,27$. The following recurrences appear in the formula section of OEIS A275667 [2].
+
+\stmt{Theorem 2.} For every integer $t\ge0$,
+\begin{align}
+ a(2t+1)&=3a(t),\label{odd}\\
+ a(4t)&=a(2t),\label{four}\\
+ a(8t+2)&=3a(4t)+4a(2t),\label{two}\\
+ a(8t+6)&=3a(4t+2)+4a(2t).\label{six}
+\end{align}
+
+\stmt{Encoding the local rule.} Each step changes the orientation of the lit triangles. Give one adjacent up-down pair the same coordinate $(0,0)$. Use as basis vectors the two translations from this down-triangle to the other down-neighbours of the up-triangle. An up-triangle at $(i,j)$ then has down-neighbours $(i,j)$, $(i+1,j)$ and $(i,j+1)$. From a down-triangle the displacements are reversed.
+
+Represent a generation by the sum of $x^iy^j$ over its lit cells in the Laurent polynomial ring $\mathbb F_2[x^{\pm1},y^{\pm1}]$. Contributions arriving in pairs cancel. The operators for the two directions and the two-step operator are
+\[
+ F=1+x+y,\qquad G=1+x^{-1}+y^{-1},\qquad H=FG.
+\]
+Starting from $1$, the polynomials at times $2s$ and $2s+1$ are $H^s$ and $FH^s$. For instance,
+\[
+ H=1+x+x^{-1}+y+y^{-1}+x/y+y/x.
+\]
+Three walks return to the initial cell in two steps. Their contributions add to one, so that cell and the six surrounding cells are lit.
+
+\stmt{Odd generations.} Let $\wt(P)$ count the nonzero monomials in $P$. Squaring doubles both exponents, so $\wt(P^2)=\wt(P)$. The three translated copies in $FP^2$ occupy the distinct exponent classes $(0,0),(1,0),(0,1)$ modulo two. This gives
+\[
+ \wt(FP^2)=3\wt(P),\qquad \wt(GP^2)=3\wt(P).
+\]
+The second identity follows from the same three parity classes. The pattern at time $4s+1$ is $F(H^s)^2$; the pattern at time $4s+3$ is $G(FH^s)^2$. Taking weights proves \eqref{odd} for even and odd $t$, respectively. In particular, $a(2^j-1)=3^j$ for all $j\ge0$.
+
+\newpage
+\section*{3. Counting overlaps in even generations}
+Set $b(t)=\wt(H^t)=a(2t)$. Squaring immediately gives $b(2t)=b(t)$, proving \eqref{four}. To count $b$ at odd indices, define $c(t)=\wt((1+x)H^t)$. It counts the positions at which the pattern and its translate by one horizontal step differ.
+
+Every Laurent polynomial $Q$ has a unique decomposition
+\[
+ Q=\sum_{i,j\in\{0,1\}}x^iy^j Q_{ij}(x^2,y^2).
+\]
+Since $P^2=P(x^2,y^2)$, the four classes remain disjoint after multiplication by $P^2$, and $\wt(QP^2)=\sum_{i,j}\wt(Q_{ij}P)$. Expanding the two kernels needed here gives
+\begin{center}
+\begin{tabular}{ccccc}\toprule
+$Q$ & $Q_{00}$ & $Q_{10}$ & $Q_{01}$ & $Q_{11}$\\\midrule
+$H$ & $1$ & $1+x^{-1}$ & $1+y^{-1}$ & $x^{-1}+y^{-1}$\\[2pt]
+$(1+x)H$ & $x$ & $x^{-1}$ & $y^{-1}(1+x)$ & $1+x^{-1}$\\\bottomrule
+\end{tabular}
+\end{center}
+For example, the odd-odd terms of $H$ are $x/y$ and $y/x$. Divide by $xy$ and halve the two exponents to recover the entry $y^{-1}+x^{-1}$.
+
+Take $P=H^t$. Multiplying by a monomial preserves weight. Swapping $x,y$ or substituting $(x,y)\mapsto(x/y,1/y)$ permutes the exponent lattice and preserves $H$. Thus each binomial in the first row contributes $c(t)$: in particular $x^{-1}+y^{-1}=x^{-1}(1+x/y)$, and $1+x/y$ is the image of $1+x$ under the stated substitution. The second row has two monomials and two translates of $1+x$. Consequently,
+\[
+ b(2t+1)=b(t)+3c(t),\qquad c(2t+1)=2b(t)+2c(t).
+\]
+Also $c(2t)=2b(t)$ since the two translated squares in $(1+x)(H^t)^2$ are disjoint. Substituting and eliminating $c$ yields
+\begin{align*}
+ b(4t+1)&=b(2t)+3c(2t)=7b(t),\\
+ b(4t+3)&=b(2t+1)+3c(2t+1)\\
+        &=7b(t)+9c(t)=3b(2t+1)+4b(t).
+\end{align*}
+Now $b(t)=a(2t)$ and $a(4t)=a(2t)$ give \eqref{two} and \eqref{six}, completing the proof of Theorem 2. \hfill$\square$
+
+\stmt{Relation to earlier work.} The even-generation sequence $b$ is OEIS A247666. Ekhad, Sloane and Zeilberger [3] identify the corresponding seven-cell square-grid neighbourhood as their rule 376, after reversing one coordinate. Their classification gives counting information for that rule. The derivation here also treats the intervening triangular generations. We make no priority claim for the identities or their proofs.
+
+\newpage
+\section*{4. What Lean checks}
+\stmt{Tilings.} With rows numbered from zero, a cell in row $2i$ can pair across rows with a cell in row $2i-1$ or $2i+1$. A \texttt{Frame} records the edges to the preceding strip and the remaining target columns in source order. Row coverage requires each column exactly once. Every edge has column displacement at most one. Starting at the empty upper boundary, equality of the row lengths forces every boundary between strips to be empty. The proof constructs both directions of the correspondence between legal column permutations and words in $\V,\X$.
+
+The mixed case has a separate type. Removing one horizontal domino deletes two cells from the same row-parity class, while every remaining edge must join the classes. Lean rules out the required bijection. For parallel pieces, the position of the distinguished strip and the two-element subset of marked word positions determine the tiling.
+
+\stmt{Automaton.} A finite configuration is an element of $\mathbb F_2[\mathbb Z^2]$. The lemmas \texttt{forward\_rule} and \texttt{backward\_rule} recover the three-neighbour rule coefficient by coefficient. For the even generations, Lean expands each of the horizontal, vertical and diagonal binomial kernels and adds their weights. The paper uses their symmetry to shorten this calculation.
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}lX@{}}\toprule
+Conclusion & Lean declaration\\\midrule
+All-diagonal count & \texttt{Domicule.all\_diagonal}\\
+Two ordinary pieces & \texttt{Domicule.two\_ordinary}\\
+\eqref{odd} & \texttt{Triangular.odd\_population}\\
+\eqref{four} & \texttt{Triangular.four\_population}\\
+\eqref{two} & \texttt{Triangular.eight\_two\_population}\\
+\eqref{six} & \texttt{Triangular.eight\_six\_population}\\\bottomrule
+\end{tabularx}
+\end{center}
+
+\stmt{Reproduction.} The \href{\repo}{accompanying repository} pins Lean 4.36.0 and its mathlib revision. Run \texttt{lake exe cache get}, then \texttt{lake build}. The command \texttt{lake env lean Audit.lean} reports \texttt{propext}, \texttt{Classical.choice}, and \texttt{Quot.sound} for each of the six declarations. An independent Python enumeration checks the six even square sizes through $12\times12$ and all applicable recurrence indices through generation 255.
+
+\medskip{\large\bfseries References}\par
+\small
+[1] D. Ry{\l}ko, \href{https://oeis.org/A401673}{OEIS A401673} and the accompanying \href{https://github.com/dawidrylko/lattice-dimers/blob/master/notes/domicules/04-rectangles-by-diagonal-pieces.md}{notebook on rectangles by diagonal pieces}, 2026.\par
+[2] A. Kovba, \href{https://oeis.org/A275667/internal}{OEIS A275667}, 2016. The last three recurrences are credited there to A. Zabolotskii.\par
+[3] S. B. Ekhad, N. J. A. Sloane and D. Zeilberger, \href{https://neilsloane.com/doc/3X3.pdf}{\textit{Odd-Rule Cellular Automata on the Square Grid}}, 2015, Table 3 and appendix; see also \href{https://oeis.org/A247666}{OEIS A247666}.
+\end{document}

@@ -1,105 +1,26 @@
-# 方格铺法与三角网格上的奇数规则
+# Diagonal tilings and a triangular cellular automaton
 
-这份笔记给出 OEIS 两个条目中六个等式的直接证明。第一部分用行的奇偶性和两行条带的分解来计数。第二部分用模二多项式表达每一代亮格的位置。检索日期为 2026 年 11 月 26 日。下文保留猜想的出处，证明的首发性尚未确定。[A401673](https://oeis.org/A401673) · [A275667](https://oeis.org/A275667)
+This repository contains a four-page preprint and checked Lean proofs of six identities recorded in OEIS A401673 and A275667. The paper gives the combinatorial and algebraic arguments, a worked tiling example, and the correspondence with the formal definitions. [Read the preprint](preprint/preprint.pdf) · [LaTeX source](preprint/preprint.tex)
 
-## 一、恰好用零块或两块普通骨牌的铺法
+## Results
 
-在一个有边界的 $2n\times2n$ 方格板上，把所有格子两两配对。共边的两个格子组成一块普通骨牌，共顶点且位于对角的两个格子组成一块对角骨牌。两条对角连线可以交叉。棋盘的位置固定，旋转后不同的铺法分别计数。记恰含 $2k$ 块对角骨牌的铺法数为 $T(n,k)$。Dawid Ryłko 在 OEIS 中列出了下面两个等式，其配套笔记将它们列为根据计算得到的观察。[原条目](https://oeis.org/A401673) · [作者的计算笔记](https://github.com/dawidrylko/lattice-dimers/blob/master/notes/domicules/04-rectangles-by-diagonal-pieces.md)
+- On a fixed $2n\times 2n$ board there is one all-diagonal tiling and there are $n^2(n+1)$ tilings with exactly two ordinary dominoes. The second formula applies for $n\ge1$. [OEIS A401673](https://oeis.org/A401673) · [Lean proof](OeisProofs/Tilings.lean)
+- For the single-seed odd-neighbour rule on triangular cells, the population satisfies $a(2t+1)=3a(t)$, $a(4t)=a(2t)$, $a(8t+2)=3a(4t)+4a(2t)$, and $a(8t+6)=3a(4t+2)+4a(2t)$ for every $t\ge0$. [OEIS A275667](https://oeis.org/A275667) · [Lean proof](OeisProofs/Automaton.lean)
 
-**定理。** 对所有 $n\ge1$，
+## Reproduce the verification
 
-$$
-T(n,n^2)=1,\qquad T(n,n^2-1)=n^2(n+1).
-$$
-
-空棋盘也满足第一个等式，铺法为空铺法。
-
-**条带的结构。** 先考虑没有横骨牌的铺法。第一行的每个格子都必须配给第二行的一个格子。两行等长，第二行因此全部用完。逐次去掉最上面的两行，整块棋盘便分成 $n$ 条互不影响的双行条带。
-
-从左至右看任意一条条带。最左上格若与正下方配对，就去掉这一列，记作 $V$。若它与右下格配对，最左下格的唯一可用搭档就是右上格，于是这两列被一对交叉的对角骨牌填满，记作 $X$。重复这一步，条带与由宽一的 $V$ 和宽二的 $X$ 拼出的有序序列一一对应。反过来每个这样的序列都给出唯一铺法。
-
-**全用对角骨牌。** 每条条带只能是 $n$ 个 $X$，所以整块棋盘恰有一种铺法。
-
-**恰有两块普通骨牌。** 奇数行与偶数行的格子总数相等。任意竖骨牌或对角骨牌各占两类中的一格。若奇数行和偶数行分别有 $h_o,h_e$ 块横骨牌，则剩余格子数之差为 $2(h_e-h_o)$，必须为零。所以横骨牌总数是偶数，两块普通骨牌只能同时为竖块或同时为横块。
-
-两块皆竖时，条带分解适用。每条带的宽度 $2n$ 为偶数，故其中的 $V$ 个数是偶数。两块 $V$ 必在同一条带，有 $n$ 种选择。该条带还含 $n-1$ 个 $X$，共 $n+1$ 个符号，从中选两个位置放 $V$ 即可。其余条带各有唯一铺法。两块皆横的情形与此相差一次 $90^\circ$ 旋转，两类铺法互不重合。因此总数为
-
-$$
-2n\binom{n+1}{2}=n^2(n+1).
-$$
-
-例如 $4\times4$ 棋盘有两条双行条带。选其中一条放两块竖骨牌，有 $VVX,VXV,XVV$ 三种排法。竖块情形共六种，加上横块情形正好十二种。
-
-## 二、三角网格亮格数的四条递推
-
-在无限三角形镶嵌中，第零代仅有一个亮格。以后每一代，一个三角形变亮当且仅当它的三个共边邻格在上一代有奇数个是亮的。记第 $m$ 代亮格数为 $a(m)$。OEIS A275667 的公式栏把以下四式列为猜想。其中后三式署名 Andrei Zabolotskii。[原条目与公式](https://oeis.org/A275667/internal)
-
-**定理。** 对每个整数 $t\ge0$，
-
-$$
-\begin{aligned}
-a(2t+1)&=3a(t),\\
-a(4t)&=a(2t),\\
-a(8t+2)&=3a(4t)+4a(2t),\\
-a(8t+6)&=3a(4t+2)+4a(2t).
-\end{aligned}
-$$
-
-**把亮格写成多项式。** 三角形有朝上和朝下两种方向，每走一步就改变方向。用两个格向量为每种朝向分别编号，使上三角 $(i,j)$ 的三个下邻格为 $(i,j),(i+1,j),(i,j+1)$。这可通过给一对共边的上下三角同一个编号，并把到另两个下邻格的两种平移选作坐标基得到。反向邻接的位移恰好取负。从一个上三角出发，每一代的亮格都有相同朝向。
-
-用单项式 $x^iy^j$ 表示位置 $(i,j)$，系数在 $\mathbb F_2$ 中计算。这样，同一位置收到偶数次贡献会抵消。令
-
-$$
-F=1+x+y,\quad G=1+x^{-1}+y^{-1},\quad
-H=FG=1+x+x^{-1}+y+y^{-1}+x/y+y/x.
-$$
-
-从上三角到下三角乘 $F$，反向乘 $G$。故第 $2s$ 代的多项式为 $H^s$，第 $2s+1$ 代为 $FH^s$。用 $w(P)$ 记有非零系数的单项式个数。在特征二中 $P^2=P(x^2,y^2)$，所以 $w(P^2)=w(P)$。
-
-**奇数代。** $FP^2$ 中的三个平移副本分属指数模二的三个不同余类，所以 $w(FP^2)=3w(P)$；对 $G$ 也成立。第 $4s+1$ 代的多项式是 $F(H^s)^2$，第 $4s+3$ 代的是 $G(FH^s)^2$。两者分别给出 $a(4s+1)=3a(2s)$ 和 $a(4s+3)=3a(2s+1)$，合并即第一式。
-
-**偶数代。** 设 $b(t)=w(H^t)=a(2t)$，并引入 $c(t)=w((1+x)H^t)$。平方保持项数，故 $b(2t)=b(t)$。又因为 $1$ 和 $x$ 对平方多项式给出的两个副本不相交，$c(2t)=2b(t)$。
-
-为计算奇数下标的 $b,c$，把多项式 $Q$ 按指数奇偶性唯一写成
-
-$$
-Q=\sum_{i,j\in\{0,1\}}x^iy^j Q_{ij}(x^2,y^2).
-$$
-
-那么 $w(QP^2)$ 等于四个 $w(Q_{ij}P)$ 之和。展开 $H$ 及 $(1+x)H$ 后，各分量如下，括号给出 $(i,j)$。
-
-| $Q$ | $(0,0)$ | $(1,0)$ | $(0,1)$ | $(1,1)$ |
-|---|---|---|---|---|
-| $H$ | $1$ | $1+x^{-1}$ | $1+y^{-1}$ | $x^{-1}+y^{-1}$ |
-| $(1+x)H$ | $x$ | $x^{-1}$ | $y^{-1}(1+x)$ | $1+x^{-1}$ |
-
-取 $P=H^t$。乘单项式只平移指数。交换 $x,y$ 或代换 $(x,y)\mapsto(x/y,1/y)$ 都是指数格上的双射，且保持 $H$ 不变。因此第一行中三个二项式乘 $P$ 的项数都等于 $c(t)$。例如 $x^{-1}+y^{-1}=x^{-1}(1+x/y)$，第二种代换把 $1+x$ 送到 $1+x/y$。第二行有两个单项式，以及两个只差平移的 $1+x$。这就给出
-
-$$
-b(2t+1)=b(t)+3c(t),\qquad
-c(2t+1)=2b(t)+2c(t).
-$$
-
-把 $2t$ 和 $2t+1$ 分别代入 $b$ 的奇下标公式，消去 $c$，得到
-
-$$
-\begin{aligned}
-b(4t+1)&=b(2t)+3c(2t)=7b(t),\\
-b(4t+3)&=b(2t+1)+3c(2t+1)\\
-       &=7b(t)+9c(t)=3b(2t+1)+4b(t).
-\end{aligned}
-$$
-
-用 $b(t)=a(2t)$ 和 $b(2t)=b(t)$ 换回原记号，即得其余三式。特别地，从 $a(0)=1$ 出发，反复用第一式就得到 $a(2^j-1)=3^j$。
-
-**与已有工作的关系。** 偶数代对应已研究的七格邻域序列 A247666。Ekhad、Sloane 和 Zeilberger 在方格奇数规则的分类中列出了对应的规则 376 及其计数信息。上面的直接推导同时覆盖三角网格的奇数代和偶数代。[A247666](https://oeis.org/A247666) · [Odd-Rule Cellular Automata on the Square Grid](https://neilsloane.com/doc/3X3.pdf)
-
-## 逐项复核
-
-在本目录用 Python 3.10 或以上版本运行以下命令，仅需标准库。
+With Lean's elan toolchain manager available, run the following commands at the repository root. The project pins Lean 4.36.0 and mathlib commit `fc4f59e577feb1a4956671bc04ac18aaaf8cd842`.
 
 ~~~sh
-python verify.py
+lake exe cache get
+lake build
+lake env lean Audit.lean
 ~~~
 
-程序从第一处空格枚举配对，检查 $2\times2$ 到 $12\times12$ 六块偶边长正方形棋盘的两项计数。它还按三个邻格的更新规则逐代模拟到第 255 代，检查该范围内四条递推的每个适用下标。上文的组合与代数论证覆盖任意下标。
+The audit reports only `propext`, `Classical.choice`, and `Quot.sound` for each of the six theorems. The tiling proof starts from row coverage and local pairing constraints. The automaton proof derives the three-neighbour update at each coordinate before counting the support.
+
+## Independent enumeration
+
+Run `python verify.py` with Python 3.10 or later. The program enumerates the two tiling counts at even side lengths from 2 to 12 and directly simulates the automaton through generation 255.
+
+To rebuild the PDF, run `pdflatex preprint.tex` twice in the `preprint` directory.
